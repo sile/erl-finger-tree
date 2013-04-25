@@ -75,11 +75,63 @@ push_r(Tree, A) ->
     Root = push_r(Tree, Tree#finger_tree.root, {value, A}),
     Tree#finger_tree{root = Root}.
 
-pop_l(_) ->
-    todo.
+pop_l(Tree) ->
+    {{value, Head}, Tail} = pop_l(Tree, Tree#finger_tree.root),
+    {Head, Tree#finger_tree{root = Tail}}.
 
-pop_r(_) ->
-    todo.
+pop_l(Tree, Node) ->
+    case Node of
+        {single, A}              -> {A, empty()};
+        {deep, _, [A|Pr], M, Sf} ->
+            Head = A,
+            Tail = deep_l(Tree, Pr, M, Sf),
+            {Head, Tail}
+    end.
+
+pop_r(Tree) ->
+    {{value, Head}, Tail} = pop_r(Tree, Tree#finger_tree.root),
+    {Head, Tree#finger_tree{root = Tail}}.
+
+pop_last(List) ->
+    pop_last(List, []).
+
+pop_last([X], Acc) ->
+    {X, lists:reverse(Acc)};
+pop_last([X|Xs], Acc) ->
+    pop_last(Xs, [X|Acc]).
+
+pop_r(Tree, Node) ->
+    case Node of
+        {single, A} -> {A, empty()};
+        {deep, _, Pr, M, Sf_tmp} ->
+            {Head, Sf} = pop_last(Sf_tmp),
+            Tail = deep_r(Tree, Pr, M, Sf),
+            {Head, Tail}
+    end.
+
+deep_r(Tree, Pr, empty, []) ->
+    list_to_node(Tree, Pr);
+deep_r(Tree, Pr, M, []) ->
+    {Head, Tail} = pop_r(Tree, M),
+    deep(Tree, Pr, Tail, node_to_list(Head));
+deep_r(Tree, Pr, M, Sf) ->
+    deep(Tree, Pr, M, Sf).
+
+deep_l(Tree, [], empty, Sf) ->
+    list_to_node(Tree, Sf);
+deep_l(Tree, [], M, Sf) ->
+    {Head, Tail} = pop_l(Tree, M),
+    deep(Tree, node_to_list(Head), Tail, Sf);
+deep_l(Tree, Pr, M, Sf) ->
+    deep(Tree, Pr, M, Sf).
+
+node_to_list({node, _, A, B}) -> [A, B];
+node_to_list({node, _, A, B, C}) -> [A, B, C].
+
+list_to_node(_Tree,[A]) -> single(A);
+list_to_node(Tree, [A,B]) -> deep(Tree, [A], empty, [B]);
+list_to_node(Tree, [A,B,C]) -> deep(Tree, [A, B], empty, [C]);
+list_to_node(Tree, [A,B,C,D]) -> deep(Tree, [A,B], empty, [C,D]).
 
 head_l(Tree) -> element(1, pop_l(Tree)).
 head_r(Tree) -> element(1, pop_r(Tree)).
@@ -161,6 +213,3 @@ mconcat(Tree, List) ->
                 end,
                 Empty,
                 List).
-
-    
-    
