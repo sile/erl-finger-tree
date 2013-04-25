@@ -12,7 +12,8 @@
          reduce_l/3, reduce_r/3,
          concat/2,
          split/2, split_tree/2,
-         measure/1
+         measure/1,
+         is_empty/1
         ]).
 
 -record(monoid,
@@ -41,6 +42,9 @@ new(Monoid, MeasureFn) ->
 
 empty() ->
     empty.
+
+is_empty(#finger_tree{root = empty}) -> true;
+is_empty(_) -> false.
 
 single(A) ->
     {single, A}.
@@ -196,11 +200,11 @@ concat(Tree1, Tree2) ->
     Tree1#finger_tree{root = app3(Tree1, Tree1#finger_tree.root, [], Tree2#finger_tree.root)}.
 
 app3(Tree, empty, Ts, Node) ->
-    lists:foldl(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts);
+    lists:foldr(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts);
 app3(Tree, Node, Ts, empty) ->
     lists:foldl(fun (X, Acc) -> push_r(Tree, Acc, X) end, Node, Ts);
 app3(Tree, {single, Y}, Ts, Node) ->
-    push_l(Tree, lists:foldl(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts), Y);
+    push_l(Tree, lists:foldr(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts), Y);
 app3(Tree, Node, Ts, {single, Y}) ->
     push_r(Tree, lists:foldl(fun (X, Acc) -> push_r(Tree, Acc, X) end, Node, Ts), Y);
 app3(Tree, {deep, _, Pr1, M1, Sf1}, Ts, {deep, _, Pr2, M2, Sf2}) ->
