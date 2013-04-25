@@ -6,7 +6,9 @@
          from_list/1,
          to_list/1,
          pop_front/1,
-         pop_back/1
+         pop_back/1,
+         length/1,
+         split_at/2
         ]).
 
 new() ->
@@ -30,3 +32,8 @@ from_list(List) ->
 to_list(Ary) ->
     ft_base:to_list(Ary).
 
+length(Ary) ->
+    ft_base:measure(Ary).
+
+split_at(Ary, Index) ->
+    ft_base:split(Ary, fun (X) -> Index < X end).

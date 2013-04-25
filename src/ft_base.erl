@@ -9,7 +9,10 @@
          tail_l/1, tail_r/1,
          from_list/2,
          to_list/1,
-         reduce_l/3, reduce_r/3
+         reduce_l/3, reduce_r/3,
+         %% TODO: concat/2
+         split/2,
+         measure/1
         ]).
 
 -record(ft_monoid,
@@ -128,6 +131,8 @@ deep_l(Tree, Pr, M, Sf) ->
 node_to_list({node, _, A, B}) -> [A, B];
 node_to_list({node, _, A, B, C}) -> [A, B, C].
 
+%% XXX: name
+list_to_node(_Tree,[]) -> empty();
 list_to_node(_Tree,[A]) -> single(A);
 list_to_node(Tree, [A,B]) -> deep(Tree, [A], empty, [B]);
 list_to_node(Tree, [A,B,C]) -> deep(Tree, [A, B], empty, [C]);
@@ -139,6 +144,49 @@ head_r(Tree) -> element(1, pop_r(Tree)).
 tail_l(Tree) -> element(2, pop_l(Tree)).
 tail_r(Tree) -> element(2, pop_r(Tree)).
 
+split_digit(_Tree,_Pred,_Acc, [A])    -> {split, [], A, []};
+split_digit( Tree, Pred, Acc, [A|As]) ->
+    Acc2 = mpush_r(Tree, Acc, A),
+    case Pred(Acc2) of
+        true  -> {split, [], A, As};
+        false ->
+            {split, L, X, R} = split_digit(Tree, Pred, Acc2, As),
+            {split, [A|L], X, R}
+    end.
+
+split_tree(_Tree,_Pred,_Acc, {single, X}) -> {split, empty(), X, empty()};
+split_tree( Tree, Pred, Acc, {deep, _, Pr, M, Sf}) ->
+    Acc2 = mconcat(Tree, Acc, Pr),
+    case Pred(Acc2) of
+        true ->
+            {split, L, X, R} = split_digit(Tree, Pred, Acc, Pr),
+            {split, list_to_node(Tree, L), X, deep_l(Tree, R, M, Sf)};
+        false ->
+            Acc3 = mpush_r(Tree, Acc2, M),
+            case Pred(Acc3) of
+                true ->
+                    {split, Ml, Xs, Mr} = split_tree(Tree, Pred, Acc2, M),
+                    {split, L, X, R} = split_digit(Tree, Pred, mpush_r(Tree, Acc2, Ml), node_to_list(Xs)),
+                    {split, deep_r(Tree, Pr, Ml, L), X, deep_l(Tree, R, Mr, Sf)};
+                false ->
+                    {split, L, X, R} = split_digit(Tree, Pred, Acc3, Sf),
+                    {split, deep_r(Tree, Pr, M, L), X, list_to_node(Tree, R)}
+            end
+    end.
+
+split(Tree, Pred) ->
+    {L, R} = split(Tree, Pred, Tree#finger_tree.root),
+    {Tree#finger_tree{root = L}, Tree#finger_tree{root = R}}.
+
+split(_Tree,_Pred, empty) -> {empty(), empty()};
+split(Tree, Pred, Node) -> 
+    case Pred(measure(Tree, Node)) of
+        true ->
+            {split, L, X, R} = split_tree(Tree, Pred, mempty(Tree), Node),
+            {L, push_l(Tree, R, X)};
+        false ->
+            {Node, empty()}
+    end.
 
 reduce_l(Fn, Acc, Tree) ->
     reduce_node_l(Fn, Acc, Tree#finger_tree.root).
@@ -184,9 +232,15 @@ deep(_Tree, Msr, Pr, M, Sf) ->
 deep(Tree, Pr, M, Sf) ->
     {deep, mconcat(Tree, Pr++[M]++Sf), Pr, M, Sf}.
 
+mempty(Tree) ->
+    (Tree#finger_tree.monoid)#ft_monoid.empty.
+
+measure(Tree) ->
+    measure(Tree, Tree#finger_tree.root).
+
 measure(Tree, X) ->
     case X of
-        empty              -> (Tree#finger_tree.monoid)#ft_monoid.empty;
+        empty              -> mempty(Tree);
         {single, A}        -> measure(Tree, A);
         {node, M, _, _}    -> M;
         {node, M, _, _, _} -> M;
@@ -206,10 +260,13 @@ mpush_l(Tree, A, B) ->
 %    Append = (Tree#finger_tree.monoid)#ft_monoid.append,
 %    Append(measure(Tree, A), measure(Tree, B)).
 
-mconcat(Tree, List) ->
-    #ft_monoid{append = Append, empty = Empty} = Tree#finger_tree.monoid,
+mconcat(Tree, Init, List) ->
+    #ft_monoid{append = Append} = Tree#finger_tree.monoid,
     lists:foldl(fun (X, Acc) ->
                         Append(Acc, measure(Tree, X))
                 end,
-                Empty,
+                Init,
                 List).
+
+mconcat(Tree, List) ->
+    mconcat(Tree, mempty(Tree), List).
