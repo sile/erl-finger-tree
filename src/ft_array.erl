@@ -8,7 +8,8 @@
          pop_front/1,
          pop_back/1,
          length/1,
-         split_at/2
+         split_at/2,
+         concat/2
         ]).
 
 new() ->
@@ -37,3 +38,6 @@ length(Ary) ->
 
 split_at(Ary, Index) ->
     ft_base:split(Ary, fun (X) -> Index < X end).
+
+concat(Ary1, Ary2) ->
+    ft_base:concat(Ary1, Ary2).

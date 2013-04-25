@@ -10,12 +10,12 @@
          from_list/2,
          to_list/1,
          reduce_l/3, reduce_r/3,
-         %% TODO: concat/2
-         split/2,
+         concat/2,
+         split/2, split_tree/2,
          measure/1
         ]).
 
--record(ft_monoid,
+-record(monoid,
         {
           empty  :: term(),
           append :: function()
@@ -28,11 +28,11 @@
           root    :: ft_node()
         }).
 
--type monoid()  :: #ft_monoid{}.
+-type monoid()  :: #monoid{}.
 -type ft_node() :: term(). % TODO
 
 monoid(Empty, AppendFn) ->
-    #ft_monoid{empty = Empty, append = AppendFn}.
+    #monoid{empty = Empty, append = AppendFn}.
 
 new(Monoid, MeasureFn) ->
     #finger_tree{monoid  = Monoid,
@@ -188,6 +188,29 @@ split(Tree, Pred, Node) ->
             {Node, empty()}
     end.
 
+split_tree(Tree, Pred) ->
+    {split, L, X, R} = split_tree(Tree, Pred, mempty(Tree), Tree#finger_tree.root),
+    {Tree#finger_tree{root = L}, X, Tree#finger_tree{root = R}}.
+
+concat(Tree1, Tree2) ->
+    Tree1#finger_tree{root = app3(Tree1, Tree1#finger_tree.root, [], Tree2#finger_tree.root)}.
+
+app3(Tree, empty, Ts, Node) ->
+    lists:foldl(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts);
+app3(Tree, Node, Ts, empty) ->
+    lists:foldl(fun (X, Acc) -> push_r(Tree, Acc, X) end, Node, Ts);
+app3(Tree, {single, Y}, Ts, Node) ->
+    push_l(Tree, lists:foldl(fun (X, Acc) -> push_l(Tree, Acc, X) end, Node, Ts), Y);
+app3(Tree, Node, Ts, {single, Y}) ->
+    push_r(Tree, lists:foldl(fun (X, Acc) -> push_r(Tree, Acc, X) end, Node, Ts), Y);
+app3(Tree, {deep, _, Pr1, M1, Sf1}, Ts, {deep, _, Pr2, M2, Sf2}) ->
+    deep(Tree, Pr1, app3(Tree, M1, nodes(Tree, Sf1 ++ Ts ++ Pr2), M2), Sf2).
+
+nodes(Tree, [A,B]) -> [node(Tree, A, B)];
+nodes(Tree, [A,B,C]) -> [node(Tree, A, B, C)];
+nodes(Tree, [A,B,C,D]) -> [node(Tree,A,B), node(Tree,C,D)];
+nodes(Tree, [A,B,C | Xs]) -> [node(Tree,A,B,C) | nodes(Tree, Xs)].
+
 reduce_l(Fn, Acc, Tree) ->
     reduce_node_l(Fn, Acc, Tree#finger_tree.root).
 
@@ -220,8 +243,8 @@ reduce_node_r(Fn, Acc, Node) ->
                         Pr ++ [M] ++ Sf)
     end.
 
-%node(Tree, A, B) ->
-%    {node, mappend(Tree, A, B), A, B}.
+node(Tree, A, B) ->
+    {node, mappend(Tree, A, B), A, B}.
 
 node(Tree, A, B, C) ->
     {node, mconcat(Tree, [A,B,C]), A, B, C}.
@@ -233,7 +256,7 @@ deep(Tree, Pr, M, Sf) ->
     {deep, mconcat(Tree, Pr++[M]++Sf), Pr, M, Sf}.
 
 mempty(Tree) ->
-    (Tree#finger_tree.monoid)#ft_monoid.empty.
+    (Tree#finger_tree.monoid)#monoid.empty.
 
 measure(Tree) ->
     measure(Tree, Tree#finger_tree.root).
@@ -249,19 +272,19 @@ measure(Tree, X) ->
     end.
 
 mpush_r(Tree, A, B) ->
-    Append = (Tree#finger_tree.monoid)#ft_monoid.append,
+    Append = (Tree#finger_tree.monoid)#monoid.append,
     Append(A, measure(Tree, B)).
 
 mpush_l(Tree, A, B) ->
-    Append = (Tree#finger_tree.monoid)#ft_monoid.append,
+    Append = (Tree#finger_tree.monoid)#monoid.append,
     Append(measure(Tree, A), B).
     
-%mappend(Tree, A, B) ->
-%    Append = (Tree#finger_tree.monoid)#ft_monoid.append,
-%    Append(measure(Tree, A), measure(Tree, B)).
+mappend(Tree, A, B) ->
+    Append = (Tree#finger_tree.monoid)#monoid.append,
+    Append(measure(Tree, A), measure(Tree, B)).
 
 mconcat(Tree, Init, List) ->
-    #ft_monoid{append = Append} = Tree#finger_tree.monoid,
+    #monoid{append = Append} = Tree#finger_tree.monoid,
     lists:foldl(fun (X, Acc) ->
                         Append(Acc, measure(Tree, X))
                 end,
