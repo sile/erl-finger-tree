@@ -12,7 +12,7 @@ new_test_() ->
 
 is_ft_prioque_test() ->
     ?assertEqual(true,  ft_prioque:is_ft_prioque(ft_prioque:new())),
-    ?assertEqual(false, ft_prioque:is_ft_prioque(not_a_ft_que)).
+    ?assertEqual(false, ft_prioque:is_ft_prioque(not_a_ft_prioque)).
 
 is_empty_test_() ->
     [

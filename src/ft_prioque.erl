@@ -51,8 +51,8 @@ out(Que) ->
         true  -> {empty, Que};
         false ->
             Max = peek(Que),
-            {Less, EqualAndGreater} = ft_base:split(fun (X) -> X >= Max end, Que),
-            {_Eql, Greater}         = ft_base:pop_l(EqualAndGreater),
+            {Less, EqualOrGreater} = ft_base:split(fun (X) -> X >= Max end, Que),
+            {_Eql, Greater}        = ft_base:pop_l(EqualOrGreater),
             {Max, ft_base:concat(Less, Greater)}
     end.
 
