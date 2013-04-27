@@ -273,3 +273,24 @@ join_test_() ->
               ?assertEqual(List1++List2, ft_que:to_list(Que3))
       end}
     ].
+
+at_test_() ->
+    [
+     {"添字指定での要素アクセス",
+      fun () ->
+              List = [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z],
+              Que = ft_que:from_list(List),
+
+              ?assertEqual(a, ft_que:at(0, Que)),
+              ?assertEqual(k, ft_que:at(10, Que)),
+              ?assertEqual(z, ft_que:at(25, Que))
+      end},
+     {"範囲外アクセス",
+      fun () ->
+              List = [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z],
+              Que = ft_que:from_list(List),
+
+              ?assertError(badarg, ft_que:at(-1, Que)),
+              ?assertError(badarg, ft_que:at(length(List), Que))
+      end}
+    ].

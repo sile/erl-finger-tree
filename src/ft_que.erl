@@ -11,7 +11,8 @@
          from_list/1,
          to_list/1,
          split/2,
-         join/2
+         join/2,
+         at/2
         ]).
 
 -export_type([
@@ -91,6 +92,10 @@ from_list(Items) ->
 -spec to_list(ft_que()) -> [item()].
 to_list(Que) -> ft_base:to_list(Que).
 
+-spec join(ft_que(), ft_que()) -> ft_que().
+join(Que1, Que2) ->
+    ft_base:concat(Que1, Que2).
+
 -spec split(non_neg_integer(), ft_que()) -> {ft_que(), ft_que()}.
 split(N, Que) ->
     Len = len(Que),
@@ -100,6 +105,13 @@ split(N, Que) ->
         true    -> ft_base:split(fun (I) -> I > N end, Que)
     end.
 
--spec join(ft_que(), ft_que()) -> ft_que().
-join(Que1, Que2) ->
-    ft_base:concat(Que1, Que2).
+-spec at(non_neg_integer(), ft_que()) -> item().
+at(Index, Que) ->
+    Len = len(Que),
+    if
+        Index < 0    -> error(badarg);
+        Index >= Len -> error(badarg);
+        true         ->
+            {_, R} = ft_base:split(fun (I) -> I > Index end, Que),
+            ft_base:head_l(R)
+    end.    
