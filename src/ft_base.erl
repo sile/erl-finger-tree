@@ -22,6 +22,7 @@
               
               reduce_fn/0, reduce_result_value/0,
               
+              monoid_value/0,
               monoid_empty/0,
               monoid_append_fn/0,
 

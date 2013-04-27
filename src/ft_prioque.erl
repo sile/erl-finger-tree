@@ -1,37 +1,42 @@
 -module(ft_prioque).
 
 -export([
-         new/0,
-         push/3,
-         pop/1,
-         from_list/1,
-         max/1
+         new/0
         ]).
 
+-export_type([
+              ft_prioque/0,
+              priority/0,
+              item/0
+             ]).
+
+%%---------------------------------------------------------------------------------
+%% Types
+%%---------------------------------------------------------------------------------
+-type ft_prioque() :: ft_base:ft_base(?MODULE).
+-type priority()   :: term().
+-type item()       :: term().
+
+%%---------------------------------------------------------------------------------
+%% External Functions
+%%---------------------------------------------------------------------------------
 new() ->
-    Empty   = minus_infinity,
-    Append  = fun (minus_infinity, A) -> A;
-                  (A, minus_infinity) -> A;
-                  ({S1,_}=A, {S2,_}=B) ->
-                      case S1 < S2 of
-                          true  -> B;
-                          false -> A
-                      end
-              end,
+    Empty   = monoid_empty(),
+    Append  = fun monoid_max/2,
     Measure = fun (X) -> X end,
     ft_base:new(?MODULE, Empty, Append, Measure).
 
-push(Que, Score, Elem) ->
-    ft_base:push_l(Que, {Score, Elem}).
+%%---------------------------------------------------------------------------------
+%% Internal Functions
+%%---------------------------------------------------------------------------------
+-spec monoid_empty() -> ft_base:monoid_empty().
+monoid_empty() -> minus_inf.
 
-pop(Que) ->
-    Max = max(Que),
-    {L, R} = ft_base:split(Que, fun (X) -> X >= Max end),
-    {X, R2} = ft_base:pop_l(R),
-    {X, ft_base:concat(L, R2)}.
-
-from_list(List) ->
-    ft_base:append_list(new(), List).
-
-max(Que) ->
-    ft_base:measure(Que).
+-spec monoid_max(ft_base:monoid_value(), ft_base:monoid_value()) -> ft_base:monoid_value().
+monoid_max(minus_inf, A)       -> A;
+monoid_max(A, minus_inf)       -> A;
+monoid_max({P1,_}=A, {P2,_}=B) ->
+    case P1 < P2 of
+        true  -> B;
+        false -> A
+    end.
