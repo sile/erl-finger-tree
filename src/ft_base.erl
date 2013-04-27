@@ -1,8 +1,9 @@
 -module(ft_base).
 
 -export([
-         new/3,
+         new/4,
          is_empty/1,
+         is_finger_tree/2,
          reduce_l/3, reduce_r/3,
          push_l/2, push_r/2,
          pop_l/1, pop_r/1,
@@ -16,7 +17,7 @@
         ]).
 
 -export_type([
-              ft_base/0,
+              ft_base/0, ft_base/1,
               entry/0,
               
               reduce_fn/0, reduce_result_value/0,
@@ -40,6 +41,7 @@
 
 -record(finger_tree,
         {
+          name    :: atom(),
           monoid  :: monoid(),
           measure :: measure_fn(),
           root    :: root_tree()
@@ -48,7 +50,8 @@
 %%---------------------------------------------------------------------------------
 %% Types
 %%---------------------------------------------------------------------------------
--type ft_base() :: #finger_tree{}.
+-type ft_base()  :: #finger_tree{}.
+-type ft_base(A) :: #finger_tree{name :: A}.
 -type entry()   :: term().
 
 -type root_tree() :: tree(entry()).
@@ -78,14 +81,19 @@
 %%---------------------------------------------------------------------------------
 %% External Functions
 %%---------------------------------------------------------------------------------
--spec new(monoid_empty(), monoid_append_fn(), measure_fn()) -> ft_base().
-new(MonoidEmpty, MonoidAppendFn, MeasureFn) ->
-    #finger_tree{monoid  = #monoid{empty = MonoidEmpty, append = MonoidAppendFn},
+-spec new(atom(), monoid_empty(), monoid_append_fn(), measure_fn()) -> ft_base().
+new(Name, MonoidEmpty, MonoidAppendFn, MeasureFn) ->
+    #finger_tree{name    = Name,
+                 monoid  = #monoid{empty = MonoidEmpty, append = MonoidAppendFn},
                  measure = MeasureFn,
                  root    = empty()}.
 
 -spec is_empty(ft_base()) -> boolean().
 is_empty(FT) -> FT#finger_tree.root =:= empty.
+
+-spec is_finger_tree(ft_base(), atom()) -> boolean().
+is_finger_tree(#finger_tree{name = Name}, Name) -> true;
+is_finger_tree(_, _)                            -> false.
 
 -spec reduce_l(reduce_fn(), reduce_result_value(), ft_base()) -> reduce_result_value().
 reduce_l(Fn, Acc, FT) -> reduce_tree_l(Fn, Acc, FT#finger_tree.root).
@@ -245,7 +253,7 @@ reduce_leaf_r(Fn, Acc, Leaf) ->
     case Leaf of
         {node, _, A, B}    -> reduce_leaf_r(Fn, reduce_leaf_r(Fn, Acc, B), A);
         {node, _, A, B, C} -> reduce_leaf_r(Fn, reduce_leaf_r(Fn, reduce_leaf_r(Fn, Acc, C), B), A);
-        {Key, Value}       -> Fn(Key, Value, Acc)
+        Entry              -> Fn(Entry, Acc)
     end.
 
 -spec reduce_digit_r(reduce_fn(), reduce_result_value(), digit(X)) -> reduce_result_value() when X :: leaf().
@@ -273,11 +281,11 @@ push_l(FT, A, Tree) ->
 push_r(FT, A, Tree) ->
     case Tree of
         empty                  -> single(A);
-        {single, B}            -> deep(Tree, [B], empty(), [A]);
+        {single, B}            -> deep(FT, [B], empty(), [A]);
         {deep, Msr, Pr, M, Sf} ->
             Msr2 = monoid_append(FT, Msr, measure_leaf(FT, A)),
             case Sf of
-                [E,D,C,B] -> deep(FT, Msr2, Pr, push_r(FT, M, node(FT, E, D, C)), [B,A]);
+                [E,D,C,B] -> deep(FT, Msr2, Pr, push_r(FT, node(FT, E, D, C), M), [B,A]);
                 _         -> deep(FT, Msr2, Pr, M, Sf++[A])
             end
     end.
@@ -379,7 +387,7 @@ split_digit(_FT,_Pred,_Acc, [A])    -> {[], A, []};
 split_digit( FT, Pred, Acc, [A|As]) ->
     Acc2 = monoid_append(FT, Acc, measure_leaf(FT, A)),
     case Pred(Acc2) of
-        true  -> {split, [], A, As};
+        true  -> {[], A, As};
         false -> {L, X, R} = split_digit(FT, Pred, Acc2, As),
                  {[A|L], X, R}
     end.

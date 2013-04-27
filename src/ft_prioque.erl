@@ -19,7 +19,7 @@ new() ->
                       end
               end,
     Measure = fun (X) -> X end,
-    ft_base:new(Empty, Append, Measure).
+    ft_base:new(?MODULE, Empty, Append, Measure).
 
 push(Que, Score, Elem) ->
     ft_base:push_l(Que, {Score, Elem}).
