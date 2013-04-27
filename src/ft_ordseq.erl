@@ -1,4 +1,4 @@
--module(ft_ordset). % TODO: => bag
+-module(ft_ordseq).
 
 -export([
          new/0,

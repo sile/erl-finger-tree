@@ -1,0 +1,2 @@
+-module(ft_ordseq_tests).
+-include_lib("eunit/include/eunit.hrl").
