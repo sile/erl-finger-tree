@@ -19,7 +19,7 @@ start: compile
 	erl -pz ebin deps/*/ebin
 
 dialyzer-init:
-	dialyzer --build_plt --apps erts kernel stdlib -r ebin deps/*/ebin
+	dialyzer --build_plt --apps erts kernel stdlib -r ebin
 
 dialyzer:
-	dialyzer --src -r src/ apps/*/src/
+	dialyzer --src -r src/

@@ -17,7 +17,7 @@ new() ->
                   (_, K)      -> K
               end,
     Measure = fun (X) -> {key, X} end,
-    ft_base:new(ft_base:monoid(Empty, Append), Measure).
+    ft_base:new(Empty, Append, Measure).
 
 partition(Set, PivotElem) ->
     ft_base:split(Set, fun (K) ->  K >= {key, PivotElem} end).

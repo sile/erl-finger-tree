@@ -16,7 +16,7 @@ new() ->
     Empty   = 0,
     Append  = fun erlang:'+'/2,
     Measure = fun (_) -> 1 end,
-    ft_base:new(ft_base:monoid(Empty, Append), Measure).
+    ft_base:new(Empty, Append, Measure).
 
 push_front(Ary, Elem) ->
     ft_base:push_l(Ary, Elem).
@@ -28,7 +28,7 @@ pop_back(Ary) ->
     ft_base:pop_r(Ary).
 
 from_list(List) ->
-    ft_base:from_list(new(), List).
+    ft_base:append_list(new(), List).
 
 to_list(Ary) ->
     ft_base:to_list(Ary).

@@ -19,18 +19,19 @@ new() ->
                       end
               end,
     Measure = fun (X) -> X end,
-    ft_base:new(ft_base:monoid(Empty, Append), Measure).
+    ft_base:new(Empty, Append, Measure).
 
 push(Que, Score, Elem) ->
     ft_base:push_l(Que, {Score, Elem}).
 
 pop(Que) ->
     Max = max(Que),
-    {L, X, R} = ft_base:split_tree(Que, fun (X) -> X >= Max end),
-    {X, ft_base:concat(L, R)}.
+    {L, R} = ft_base:split(Que, fun (X) -> X >= Max end),
+    {X, R2} = ft_base:pop_l(R),
+    {X, ft_base:concat(L, R2)}.
 
 from_list(List) ->
-    ft_base:from_list(new(), List).
+    ft_base:append_list(new(), List).
 
 max(Que) ->
     ft_base:measure(Que).
