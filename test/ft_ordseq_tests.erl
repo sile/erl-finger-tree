@@ -211,3 +211,31 @@ split_test_() ->
               ?assertEqual([l,n,r], ft_ordseq:to_list(SeqR))
       end}
     ].
+
+large_data_test_() ->
+    [
+     {"要素数が多い場合の merge() のテスト",
+      fun () ->
+              List1 = [random:uniform(100000) || _ <- lists:seq(0, 1000)],
+              List2 = [random:uniform(100000) || _ <- lists:seq(0, 1000)],
+              
+              Seq1 = ft_ordseq:from_list(List1),
+              Seq2 = ft_ordseq:from_list(List2),
+              Seq3 = ft_ordseq:merge(Seq1, Seq2),
+
+              ?assertEqual(length(List1++List2), ft_ordseq:len(Seq3)),
+              ?assertEqual(lists:sort(List1++List2), ft_ordseq:to_list(Seq3))
+      end},
+     {"要素数が多い場合の member() のテスト",
+      fun () ->
+              List1 = [random:uniform(100000) || _ <- lists:seq(0, 1000)],
+              List2 = [random:uniform(100000) || _ <- lists:seq(0, 1000)],
+              
+              Seq1 = ft_ordseq:from_list(List1),
+              Seq2 = ft_ordseq:from_list(List2),
+              Seq3 = ft_ordseq:merge(Seq1, Seq2),
+
+              lists:foreach(fun (N) -> ?assert(ft_ordseq:member(N, Seq3)) end,
+                            lists:usort(List1++List2))
+      end}
+    ].
