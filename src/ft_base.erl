@@ -181,7 +181,7 @@ deep(FT, Pr, M, Sf) ->
 deep(_FT, Msr, Pr, M, Sf) ->
     {deep, Msr, Pr, M, Sf}.
 
--spec deep_l(ft_base(), []|digit(X), tree(X), digit(X)) -> tree(X) when X :: leaf().
+-spec deep_l(ft_base(), []|digit(X), tree(node(X)), digit(X)) -> tree(X) when X :: leaf().
 deep_l(FT, [], empty, Sf) ->
     digit_to_tree(FT, Sf);
 deep_l(FT, [], M, Sf) ->
@@ -190,7 +190,7 @@ deep_l(FT, [], M, Sf) ->
 deep_l(FT, Pr, M, Sf) ->
     deep(FT, Pr, M, Sf).
 
--spec deep_r(ft_base(), digit(X), tree(X), []|digit(X)) -> tree(X) when X :: leaf().
+-spec deep_r(ft_base(), digit(X), tree(node(X)), []|digit(X)) -> tree(X) when X :: leaf().
 deep_r(Tree, Pr, empty, []) ->
     digit_to_tree(Tree, Pr);
 deep_r(Tree, Pr, M, []) ->
