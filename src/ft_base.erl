@@ -322,7 +322,7 @@ append_r(FT, As, Tree) ->
 concat(FT, Tree1, Tree2) ->
     app3(FT, Tree1, [], Tree2).
 
--spec app3(ft_base(), tree(X), [node(X)], tree(X)) -> tree(X) when X :: leaf().
+-spec app3(ft_base(), tree(X), [X], tree(X)) -> tree(X) when X :: leaf().
 app3(FT, empty, Nodes, Tree)       -> append_l(FT, Nodes, Tree);
 app3(FT, {single, A}, Nodes, Tree) -> append_l(FT, [A | Nodes], Tree);
 app3(FT, Tree, Nodes, empty)       -> append_r(FT, Nodes, Tree);
