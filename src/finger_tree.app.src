@@ -1,7 +1,8 @@
 {application, finger_tree,
  [
-  {description, ""},
-  {vsn, "1"},
+  {description, "A FingerTree Implementation"},
+  {vsn, "0.1.0"},
+  {modules, [ft_base, ft_ordseq, ft_prioque, ft_que]},
   {registered, []},
   {applications, [
                   kernel,

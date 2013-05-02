@@ -172,7 +172,7 @@ empty() -> empty.
 -spec single(X) -> tree(X) when X :: leaf().
 single(A) -> {single, A}.
 
--spec deep(ft_base(), digit(X), tree(X), digit(X)) -> tree(X) when X :: leaf().
+-spec deep(ft_base(), digit(X), tree(node(X)), digit(X)) -> tree(X) when X :: leaf().
 deep(FT, Pr, M, Sf) ->
     Msr = monoid_concat(FT, measure_leaf_list(FT, Pr) ++ [measure_tree(FT, M)] ++ measure_leaf_list(FT, Sf)),
     deep(FT, Msr, Pr, M, Sf).
